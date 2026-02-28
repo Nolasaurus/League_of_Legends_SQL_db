@@ -3,7 +3,7 @@ name = "lol-api"
 version = "0.1.0"
 description = "League of Legends API client and frontend"
 readme = "README.md"
-requires-python = ">=3.9.7"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Nolan Meyer", email = "meyer09@gmail.com"}]
 dependencies = [
@@ -12,12 +12,12 @@ dependencies = [
     "psycopg2>=2.9.9",
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
-    "streamlit>=1.28.2",
     "sqlalchemy",
 ]
 
 [project.optional-dependencies]
 test = ["pytest", "selenium"]
+ui = ["streamlit>=1.28.2"]
 
 [project.urls]
 repository = "https://github.com/Nolasaurus/League_of_Legends_SQL_db"
