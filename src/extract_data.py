@@ -58,6 +58,7 @@ def get_champion_stats(match_timeline_dto):
                     "bonusMagicPenPercent", 0.0
                 ),
                 "cc_reduction": champion_stats.get("ccReduction", 0),
+                "cooldown_reduction": champion_stats.get("cooldownReduction", 0),
                 "health": champion_stats.get("health", 0),
                 "health_max": champion_stats.get("healthMax", 0),
                 "health_regen": champion_stats.get("healthRegen", 0),
@@ -99,6 +100,7 @@ def get_match_metadata(match_dto):
         "platform_id": info.get("platformId", ""),
         "queue_id": info.get("queueId", 0),
         "tournament_code": info.get("tournamentCode", ""),
+        "end_of_game_result": info.get("endOfGameResult", ""),
     }
 
     return pd.DataFrame([match_metadata_dict])
@@ -459,6 +461,18 @@ def get_challenges(match_dto):
             "ward_takedowns": challenges.get("wardTakedowns", 0),
             "ward_takedowns_before_20m": challenges.get("wardTakedownsBefore20m", 0),
             "wards_guarded": challenges.get("wardsGuarded", 0),
+            "earliest_baron": challenges.get("earliestBaron", None),
+            "earliest_dragon_takedown": challenges.get("earliestDragonTakedown", None),
+            "first_turret_killed_time": challenges.get("firstTurretKilledTime", None),
+            "baron_buff_gold_advantage_over_threshold": challenges.get("baronBuffGoldAdvantageOverThreshold", None),
+            "control_ward_time_coverage_in_river_or_enemy_half": challenges.get("controlWardTimeCoverageInRiverOrEnemyHalf", None),
+            "legendary_item_used": challenges.get("legendaryItemUsed", None),
+            "solo_turrets_lategame": challenges.get("soloTurretsLategame", 0),
+            "void_monster_kill": challenges.get("voidMonsterKill", 0),
+            "fist_bump_participation": challenges.get("fistBumpParticipation", 0),
+            "played_champ_select_position": challenges.get("playedChampSelectPosition", 0),
+            "shortest_time_to_ace_from_first_takedown": challenges.get("shortestTimeToAceFromFirstTakedown", None),
+            "heal_from_map_sources": challenges.get("healFromMapSources", 0.0),
         }
 
         challenges_list.append(values)
@@ -589,6 +603,7 @@ def get_participant_dto(match_dto):
             "puuid": participant.get("puuid", ""),
             "quadra_kills": participant.get("quadraKills", 0),
             "riot_id_name": participant.get("riotIdName", ""),
+            "riot_id_game_name": participant.get("riotIdGameName") or participant.get("riotIdName", ""),
             "riot_id_tagline": participant.get("riotIdTagline", ""),
             "role": participant.get("role", ""),
             "sight_wards_bought_in_game": participant.get("sightWardsBoughtInGame", 0),
@@ -631,6 +646,11 @@ def get_participant_dto(match_dto):
             "wards_killed": participant.get("wardsKilled", 0),
             "wards_placed": participant.get("wardsPlaced", 0),
             "win": participant.get("win", False),
+            "damage_dealt_to_epic_monsters": participant.get("damageDealtToEpicMonsters", 0),
+            "retreat_pings": participant.get("retreatPings", 0),
+            "player_augment5": participant.get("playerAugment5", 0),
+            "player_augment6": participant.get("playerAugment6", 0),
+            "role_bound_item": participant.get("roleBoundItem", 0),
             "perks_defense": participant.get("perks", {}).get("defense", 0),
             "perks_flex": participant.get("perks", {}).get("flex", 0),
             "perks_offense": participant.get("perks", {}).get("offense", 0),

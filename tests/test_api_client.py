@@ -5,14 +5,14 @@ from api_client import API_Client
 # Test class for GetMatchByMatchId
 @patch('api_client.requests.get')
 def test_get_match_by_match_id_successful(mock_get):
-    with open('tests/files/NA1_4729149632_match_data.json', 'r') as file:
+    with open('tests/files/NA1_5502178917_match_data.json', 'r') as file:
         expected_match_data = json.load(file)
 
     mock_response = mock_get.return_value
     mock_response.status_code = 200
     mock_response.json.return_value = expected_match_data
 
-    match_id = 'NA1_4729149632'
+    match_id = 'NA1_5502178917'
     client = API_Client()
     result = client.get_match_by_match_id(match_id)
 

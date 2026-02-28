@@ -462,3 +462,28 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   ALTER TABLE "damage_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Schema migrations: add new columns to existing tables if not present
+ALTER TABLE "match_metadata" ADD COLUMN IF NOT EXISTS "end_of_game_result" VARCHAR(255);
+
+ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "riot_id_game_name" VARCHAR(255);
+ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "damage_dealt_to_epic_monsters" INT;
+ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "retreat_pings" INT;
+ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "player_augment5" INT;
+ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "player_augment6" INT;
+ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "role_bound_item" INT;
+
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "earliest_baron" FLOAT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "earliest_dragon_takedown" FLOAT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "first_turret_killed_time" FLOAT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "baron_buff_gold_advantage_over_threshold" FLOAT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "control_ward_time_coverage_in_river_or_enemy_half" FLOAT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "legendary_item_used" INT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "solo_turrets_lategame" INT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "void_monster_kill" INT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "fist_bump_participation" INT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "played_champ_select_position" INT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "shortest_time_to_ace_from_first_takedown" FLOAT;
+ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "heal_from_map_sources" FLOAT;
+
+ALTER TABLE "champion_stats" ADD COLUMN IF NOT EXISTS "cooldown_reduction" INT;
