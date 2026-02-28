@@ -7,17 +7,16 @@ requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Nolan Meyer", email = "meyer09@gmail.com"}]
 dependencies = [
-    "matplotlib>=3.8.1",
     "pandas>=2.1.3",
-    "psycopg2>=2.9.9",
+    "psycopg2-binary>=2.9.9",
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
     "sqlalchemy",
 ]
 
 [project.optional-dependencies]
-test = ["pytest", "selenium"]
-ui = ["streamlit>=1.28.2"]
+test = ["pytest"]
+ui = ["streamlit>=1.28.2", "matplotlib>=3.8.1", "selenium"]
 
 [project.urls]
 repository = "https://github.com/Nolasaurus/League_of_Legends_SQL_db"

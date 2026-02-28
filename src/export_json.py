@@ -5,15 +5,13 @@ as JSON files consumed by the GitHub Pages frontend.
 Run after ingest_daily.py in the GitHub Actions workflow.
 """
 
-import json
 import logging
-import os
 import sys
 from pathlib import Path
 
 import pandas as pd
 
-from postgres_helperfile import connect_db
+from postgres_helperfile import create_postgres_engine
 
 logging.basicConfig(
     level=logging.INFO,
@@ -68,7 +66,8 @@ def main():
     queries = parse_queries(SQL_FILE)
     logging.info("Found %d queries: %s", len(queries), list(queries.keys()))
 
-    with connect_db("readonly") as conn:
+    engine = create_postgres_engine()
+    with engine.connect() as conn:
         for name, sql in queries.items():
             try:
                 export(name, sql, conn)

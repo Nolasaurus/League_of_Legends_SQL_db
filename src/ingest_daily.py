@@ -23,7 +23,8 @@ logging.basicConfig(
 )
 
 SUMMONER_SAMPLE = 50   # max summoners to process per run
-MATCHES_PER_SUMMONER = 5
+MATCHES_PER_SUMMONER = 20
+MAX_INSERTS = 1000     # stop after inserting this many new matches per run
 _SCHEMA = Path(__file__).parent / "sql_tables" / "loldb.sql"
 
 
@@ -70,6 +71,9 @@ def main():
 
         match_ids = client.get_match_ids_by_puuid(puuid, count=MATCHES_PER_SUMMONER) or []
         for match_id in match_ids:
+            if inserted >= MAX_INSERTS:
+                logging.info("Reached MAX_INSERTS limit (%d), stopping.", MAX_INSERTS)
+                break
             if match_id in known:
                 skipped += 1
                 continue
@@ -80,6 +84,9 @@ def main():
                 logging.info("Inserted %s", match_id)
             except Exception as e:
                 logging.warning("Skipping %s: %s", match_id, e)
+
+        if inserted >= MAX_INSERTS:
+            break
 
     logging.info("Done. Inserted: %d, Already present: %d", inserted, skipped)
 

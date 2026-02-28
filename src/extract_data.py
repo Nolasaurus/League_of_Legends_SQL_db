@@ -270,12 +270,12 @@ def get_victim_damage_dealt(match_timeline_dto):
 def get_challenges(match_dto):
     challenges_list = []
 
-    participants = match_dto.get("info").get("participants")
+    participants = match_dto.get("info", {}).get("participants", [])
     for participant in participants:
-        challenges = participant.get("challenges")
+        challenges = participant.get("challenges") or {}
 
         values = {
-            "match_id": match_dto.get("metadata").get("matchId"),
+            "match_id": match_dto.get("metadata", {}).get("matchId", ""),
             "participant_id": participant.get("participantId"),
             "assist_streak_count": challenges.get("assistStreakCount", 0),
             "ability_uses": challenges.get("abilityUses", 0),
