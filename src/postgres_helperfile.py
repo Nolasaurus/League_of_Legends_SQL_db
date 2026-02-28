@@ -106,6 +106,11 @@ class SQLHelper:
 
 
 def connect_db(user_role="readonly"):
+    # Cloud deployment: DATABASE_URL takes precedence (Neon/Supabase)
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return psycopg2.connect(database_url, connect_timeout=10)
+
     dbname = "loldb"
     user = (
         os.getenv("ADMIN_POSTGRES_USER")
@@ -131,14 +136,18 @@ def connect_db(user_role="readonly"):
 
 
 def create_postgres_engine():
+    # Cloud deployment: DATABASE_URL takes precedence (Neon/Supabase)
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return create_engine(database_url)
+
     dbname = "loldb"
     user = os.getenv("ADMIN_POSTGRES_USER")
     password = os.getenv("ADMIN_POSTGRES_PASSWORD")
     host = "localhost"
     port = "5432"
     connection_str = f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
-    engine = create_engine(connection_str)
-    return engine
+    return create_engine(connection_str)
 
 
 def execute_sql_file(file_path):

@@ -1,0 +1,39 @@
+name: Daily Data Ingestion
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # 6am UTC daily
+  workflow_dispatch:       # manual trigger from GitHub UI
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install poetry && poetry install --no-root
+
+      - name: Ingest ladder matches
+        run: poetry run python src/ingest_daily.py
+        env:
+          RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Export JSON for GitHub Pages
+        run: poetry run python src/export_json.py
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Commit updated data files
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add docs/data/
+          git diff --cached --quiet || git commit -m "chore: update data $(date -u +%Y-%m-%d)"
+          git push

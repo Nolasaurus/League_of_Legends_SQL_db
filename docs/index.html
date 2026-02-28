@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoL Meta Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0a0e1a; color: #c8d0e0; }
+    header { padding: 1.5rem 2rem; border-bottom: 1px solid #1e2a40; }
+    header h1 { font-size: 1.4rem; color: #c89b3c; letter-spacing: 0.05em; }
+    header p { font-size: 0.8rem; color: #5a6a88; margin-top: 0.25rem; }
+    nav { display: flex; gap: 0.5rem; padding: 1rem 2rem; border-bottom: 1px solid #1e2a40; }
+    nav button {
+      padding: 0.4rem 1rem; border: 1px solid #1e2a40; background: transparent;
+      color: #c8d0e0; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
+    }
+    nav button.active { background: #1e2a40; color: #c89b3c; border-color: #c89b3c; }
+    #status { padding: 0.5rem 2rem; font-size: 0.75rem; color: #5a6a88; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem 2rem; }
+    .chart-box { background: #0f1624; border: 1px solid #1e2a40; border-radius: 6px; padding: 0.5rem; }
+    .chart-box.full { grid-column: 1 / -1; }
+    @media (max-width: 800px) { .chart-grid { grid-template-columns: 1fr; } .chart-box.full { grid-column: 1; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>LoL Meta Dashboard</h1>
+  <p>High-elo (Challenger + GrandMaster) match data · Updated daily</p>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('champions')">Champions</button>
+  <button onclick="showTab('items')">Items</button>
+  <button onclick="showTab('meta')">Meta Trend</button>
+</nav>
+
+<div id="status">Loading data…</div>
+
+<div id="champions" class="chart-grid">
+  <div class="chart-box full" id="champ-winrate-trend"></div>
+  <div class="chart-box" id="champ-winrate-bar"></div>
+  <div class="chart-box" id="champ-pickrate-bar"></div>
+</div>
+
+<div id="items" class="chart-grid" style="display:none">
+  <div class="chart-box" id="item-winrate-bar"></div>
+  <div class="chart-box" id="item-popularity-bar"></div>
+</div>
+
+<div id="meta" class="chart-grid" style="display:none">
+  <div class="chart-box full" id="meta-rank-delta"></div>
+</div>
+
+<script>
+const BASE = './data/';
+const PLOTLY_CONFIG = { responsive: true, displayModeBar: false };
+const LAYOUT_BASE = {
+  paper_bgcolor: '#0f1624', plot_bgcolor: '#0f1624',
+  font: { color: '#c8d0e0', size: 11 },
+  margin: { t: 40, r: 10, b: 60, l: 50 },
+  xaxis: { gridcolor: '#1e2a40' },
+  yaxis: { gridcolor: '#1e2a40' },
+};
+
+function showTab(name) {
+  ['champions', 'items', 'meta'].forEach(t => {
+    document.getElementById(t).style.display = t === name ? 'grid' : 'none';
+  });
+  document.querySelectorAll('nav button').forEach((b, i) => {
+    b.classList.toggle('active', ['champions','items','meta'][i] === name);
+  });
+}
+
+async function load(file) {
+  const r = await fetch(BASE + file);
+  if (!r.ok) throw new Error(`${file}: ${r.status}`);
+  return r.json();
+}
+
+function topN(data, key, n = 20) {
+  const latest = data.reduce((m, r) => r.day > m ? r.day : m, '');
+  const today = data.filter(r => r.day === latest);
+  return [...today].sort((a, b) => b[key] - a[key]).slice(0, n).map(r => r.champion_name);
+}
+
+async function renderChampions() {
+  const data = await load('champion_winrates.json');
+
+  // --- rolling win rate trend (top 10 by recent games) ---
+  const top10 = topN(data, 'rolling_7d_games', 10);
+  const traces = top10.map(champ => {
+    const rows = data.filter(r => r.champion_name === champ).sort((a, b) => a.day < b.day ? -1 : 1);
+    return { x: rows.map(r => r.day), y: rows.map(r => r.rolling_7d_winrate),
+             mode: 'lines', name: champ, line: { width: 2 } };
+  });
+  Plotly.newPlot('champ-winrate-trend', traces, {
+    ...LAYOUT_BASE, title: '7-Day Rolling Win Rate — Top 10 Champions',
+    yaxis: { ...LAYOUT_BASE.yaxis, ticksuffix: '%', range: [40, 65] }
+  }, PLOTLY_CONFIG);
+
+  // --- latest snapshot bar charts ---
+  const latest = data.reduce((m, r) => r.day > m ? r.day : m, '');
+  const today = data.filter(r => r.day === latest)
+    .sort((a, b) => b.rolling_7d_winrate - a.rolling_7d_winrate).slice(0, 20);
+
+  Plotly.newPlot('champ-winrate-bar',
+    [{ x: today.map(r => r.champion_name), y: today.map(r => r.rolling_7d_winrate),
+       type: 'bar', marker: { color: '#c89b3c' } }],
+    { ...LAYOUT_BASE, title: 'Win Rate (latest)', yaxis: { ...LAYOUT_BASE.yaxis, ticksuffix: '%' } },
+    PLOTLY_CONFIG);
+
+  Plotly.newPlot('champ-pickrate-bar',
+    [{ x: today.map(r => r.champion_name), y: today.map(r => r.rolling_7d_games),
+       type: 'bar', marker: { color: '#3c7ec8' } }],
+    { ...LAYOUT_BASE, title: 'Games Played (7-day)', yaxis: { ...LAYOUT_BASE.yaxis } },
+    PLOTLY_CONFIG);
+}
+
+async function renderItems() {
+  const data = await load('item_winrates.json');
+  const latest = data.reduce((m, r) => r.week > m ? r.week : m, '');
+  const top = data.filter(r => r.week === latest)
+    .sort((a, b) => b.games_with_item - a.games_with_item).slice(0, 25);
+
+  Plotly.newPlot('item-winrate-bar',
+    [{ x: top.map(r => String(r.item_id)), y: top.map(r => r.winrate_pct),
+       type: 'bar', marker: { color: '#c89b3c' } }],
+    { ...LAYOUT_BASE, title: 'Item Win Rate (this week)', yaxis: { ...LAYOUT_BASE.yaxis, ticksuffix: '%' } },
+    PLOTLY_CONFIG);
+
+  Plotly.newPlot('item-popularity-bar',
+    [{ x: top.map(r => String(r.item_id)), y: top.map(r => r.games_with_item),
+       type: 'bar', marker: { color: '#3c7ec8' } }],
+    { ...LAYOUT_BASE, title: 'Item Popularity (this week)' },
+    PLOTLY_CONFIG);
+}
+
+async function renderMeta() {
+  const data = await load('meta_trend.json');
+  const weeks = [...new Set(data.map(r => r.week))].sort().slice(-6);
+  const top20 = [...new Set(
+    data.filter(r => weeks.includes(r.week))
+      .sort((a, b) => a.pick_rank - b.pick_rank)
+      .slice(0, 40).map(r => r.champion_name)
+  )].slice(0, 20);
+
+  const traces = top20.map(champ => {
+    const rows = data.filter(r => r.champion_name === champ && weeks.includes(r.week))
+      .sort((a, b) => a.week < b.week ? -1 : 1);
+    return { x: rows.map(r => r.week), y: rows.map(r => r.pick_rank_delta ?? 0),
+             type: 'bar', name: champ };
+  });
+
+  Plotly.newPlot('meta-rank-delta', traces, {
+    ...LAYOUT_BASE, barmode: 'group',
+    title: 'Pick Rank Change Week-over-Week (negative = rising)',
+    yaxis: { ...LAYOUT_BASE.yaxis, autorange: 'reversed' }
+  }, PLOTLY_CONFIG);
+}
+
+async function init() {
+  const status = document.getElementById('status');
+  try {
+    await Promise.all([renderChampions(), renderItems(), renderMeta()]);
+    status.textContent = 'Data loaded.';
+  } catch (e) {
+    status.textContent = `Error loading data: ${e.message}`;
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
