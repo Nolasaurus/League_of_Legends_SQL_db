@@ -18,6 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
+    force=True,  # postgres_helperfile sets up file logging at import time; override it
 )
 
 OUT_DIR = Path(__file__).parent.parent / "docs" / "data"
@@ -78,6 +79,8 @@ def export(query_name: str, sql: str, conn) -> None:
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     queries = parse_queries(SQL_FILE)
+    if not SQL_FILE.exists():
+        raise FileNotFoundError(f"Missing SQL file: {SQL_FILE.resolve()}")
     logging.info("Found %d queries: %s", len(queries), list(queries.keys()))
 
     failures = []
@@ -86,8 +89,8 @@ def main():
         for name, sql in queries.items():
             try:
                 export(name, sql, conn)
-            except Exception as e:
-                logging.error("Failed to export %s: %s", name, e)
+            except Exception:
+                logging.exception("Failed to export %s", name)  # full traceback
                 failures.append(name)
 
     if failures:
