@@ -1,4 +1,4 @@
-CREATE TABLE "match_metadata" (
+CREATE TABLE IF NOT EXISTS "match_metadata" (
   "data_version" VARCHAR(255),
   "match_id" VARCHAR(255) PRIMARY KEY,
   "game_creation" BIGINT,
@@ -16,19 +16,7 @@ CREATE TABLE "match_metadata" (
   "tournament_code" VARCHAR(255)
 );
 
-CREATE TABLE "perk_style_selections" (
-  "match_id" VARCHAR(255),
-  "participant_id" INT,
-  "perk" INT,
-  "var1" INT,
-  "var2" INT,
-  "var3" INT,
-  "perks_description" VARCHAR(255),
-  "perks_style" INT,
-  PRIMARY KEY ("match_id", "participant_id", "perks_style")
-);
-
-CREATE TABLE "participant_dto" (
+CREATE TABLE IF NOT EXISTS "participant_dto" (
   "match_id" VARCHAR(255),
   "participant_id" INT,
   "assists" INT,
@@ -140,7 +128,19 @@ CREATE TABLE "participant_dto" (
   PRIMARY KEY ("match_id", "participant_id")
 );
 
-CREATE TABLE "challenges" (
+CREATE TABLE IF NOT EXISTS "perk_style_selections" (
+  "match_id" VARCHAR(255),
+  "participant_id" INT,
+  "perk" INT,
+  "var1" INT,
+  "var2" INT,
+  "var3" INT,
+  "perks_description" VARCHAR(255),
+  "perks_style" INT,
+  PRIMARY KEY ("match_id", "participant_id", "perks_style")
+);
+
+CREATE TABLE IF NOT EXISTS "challenges" (
   "match_id" VARCHAR(255),
   "participant_id" INT,
   "assist_streak_count" INT,
@@ -256,7 +256,7 @@ CREATE TABLE "challenges" (
   PRIMARY KEY ("match_id", "participant_id")
 );
 
-CREATE TABLE "participant_frames" (
+CREATE TABLE IF NOT EXISTS "participant_frames" (
   "match_id" VARCHAR(255),
   "participant_id" INT,
   "frame_number" INT,
@@ -274,7 +274,7 @@ CREATE TABLE "participant_frames" (
   PRIMARY KEY ("match_id", "frame_number", "participant_id")
 );
 
-CREATE TABLE "champion_stats" (
+CREATE TABLE IF NOT EXISTS "champion_stats" (
   "match_id" VARCHAR(255),
   "frame_number" INT,
   "participant_id" INT,
@@ -288,6 +288,7 @@ CREATE TABLE "champion_stats" (
   "bonus_armor_pen_percent" FLOAT,
   "bonus_magic_pen_percent" FLOAT,
   "cc_reduction" INT,
+  "cooldown_reduction" INT,
   "health" INT,
   "health_max" INT,
   "health_regen" INT,
@@ -305,7 +306,7 @@ CREATE TABLE "champion_stats" (
   PRIMARY KEY ("match_id", "frame_number", "participant_id")
 );
 
-CREATE TABLE "match_events" (
+CREATE TABLE IF NOT EXISTS "match_events" (
   "match_id" VARCHAR(255),
   "frame_number" INT,
   "event_number" INT,
@@ -346,7 +347,7 @@ CREATE TABLE "match_events" (
   PRIMARY KEY ("match_id", "frame_number", "event_number")
 );
 
-CREATE TABLE "victim_damage_dealt" (
+CREATE TABLE IF NOT EXISTS "victim_damage_dealt" (
   "match_id" VARCHAR(255),
   "frame_number" INT,
   "event_number" INT,
@@ -363,7 +364,7 @@ CREATE TABLE "victim_damage_dealt" (
   PRIMARY KEY ("match_id", "frame_number", "event_number", "damage_number")
 );
 
-CREATE TABLE "victim_damage_received" (
+CREATE TABLE IF NOT EXISTS "victim_damage_received" (
   "match_id" VARCHAR(255),
   "frame_number" INT,
   "event_number" INT,
@@ -380,7 +381,7 @@ CREATE TABLE "victim_damage_received" (
   PRIMARY KEY ("match_id", "frame_number", "event_number", "damage_number")
 );
 
-CREATE TABLE "damage_stats" (
+CREATE TABLE IF NOT EXISTS "damage_stats" (
   "match_id" VARCHAR(255),
   "frame_number" INT,
   "participant_id" INT,
@@ -399,7 +400,7 @@ CREATE TABLE "damage_stats" (
   PRIMARY KEY ("match_id", "participant_id", "frame_number")
 );
 
-CREATE TABLE "teams" (
+CREATE TABLE IF NOT EXISTS "teams" (
   "team_id" INT,
   "match_id" VARCHAR(255),
   "baron_first" BOOLEAN,
@@ -418,23 +419,46 @@ CREATE TABLE "teams" (
   PRIMARY KEY ("match_id", "team_id")
 );
 
-CREATE TABLE "bans" (
+CREATE TABLE IF NOT EXISTS "bans" (
   "match_id" VARCHAR(255),
   "champion_id" INT,
   "pick_turn" INT,
   PRIMARY KEY ("match_id", "pick_turn")
 );
 
--- FK to match_metadata
-ALTER TABLE "participant_dto" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
-ALTER TABLE "match_events" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
-ALTER TABLE "teams" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
--- FK to participant_dto
-ALTER TABLE "challenges" ADD FOREIGN KEY ("match_id", "participant_id") REFERENCES "participant_dto" ("match_id", "participant_id");
-ALTER TABLE "perk_style_selections" ADD FOREIGN KEY ("match_id", "participant_id") REFERENCES "participant_dto" ("match_id", "participant_id");
--- FK to match_events
-ALTER TABLE "victim_damage_dealt" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
-ALTER TABLE "victim_damage_received" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
--- FK to participant_frames
-ALTER TABLE "champion_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
-ALTER TABLE "damage_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
+-- Foreign keys (skipped silently if already present)
+DO $$ BEGIN
+  ALTER TABLE "participant_dto" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "match_events" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "teams" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "challenges" ADD FOREIGN KEY ("match_id", "participant_id") REFERENCES "participant_dto" ("match_id", "participant_id");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "perk_style_selections" ADD FOREIGN KEY ("match_id", "participant_id") REFERENCES "participant_dto" ("match_id", "participant_id");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "victim_damage_dealt" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "victim_damage_received" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "champion_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE "damage_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;

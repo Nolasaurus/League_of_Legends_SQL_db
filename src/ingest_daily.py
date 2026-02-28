@@ -10,6 +10,7 @@ Capped at SUMMONER_SAMPLE summoners per run to stay within Riot rate limits.
 import logging
 import random
 import sys
+from pathlib import Path
 
 from api_client import API_Client
 from insert_data import cached_insert
@@ -23,6 +24,17 @@ logging.basicConfig(
 
 SUMMONER_SAMPLE = 50   # max summoners to process per run
 MATCHES_PER_SUMMONER = 5
+_SCHEMA = Path(__file__).parent / "sql_tables" / "loldb.sql"
+
+
+def ensure_schema():
+    """Apply loldb.sql to the database if tables don't exist yet."""
+    sql = _SCHEMA.read_text()
+    with connect_db("admin") as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+        conn.commit()
+    logging.info("Schema verified/applied.")
 
 
 def existing_match_ids():
@@ -33,6 +45,7 @@ def existing_match_ids():
 
 
 def main():
+    ensure_schema()
     client = API_Client()
 
     challenger_ids = client.get_challenger_league() or []
