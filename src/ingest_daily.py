@@ -38,11 +38,14 @@ def ensure_schema():
     logging.info("Schema verified/applied.")
 
 
-def existing_match_ids():
+def match_id_exists(match_id: str) -> bool:
+    """Point lookup against the PK index — no full table scan."""
     with connect_db("readonly") as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT match_id FROM match_metadata")
-            return {row[0] for row in cur.fetchall()}
+            cur.execute(
+                "SELECT 1 FROM match_metadata WHERE match_id = %s LIMIT 1", (match_id,)
+            )
+            return cur.fetchone() is not None
 
 
 def main():
@@ -55,9 +58,9 @@ def main():
     logging.info("Ladder size: %d summoners", len(all_ids))
 
     sample = random.sample(all_ids, min(SUMMONER_SAMPLE, len(all_ids)))
-    known = existing_match_ids()
-    logging.info("Already have %d matches in DB", len(known))
-
+    # In-memory set tracks only IDs inserted this run so the same match_id
+    # seen via multiple summoners doesn't trigger redundant API calls.
+    inserted_this_run: set[str] = set()
     inserted = 0
     skipped = 0
 
@@ -74,12 +77,12 @@ def main():
             if inserted >= MAX_INSERTS:
                 logging.info("Reached MAX_INSERTS limit (%d), stopping.", MAX_INSERTS)
                 break
-            if match_id in known:
+            if match_id in inserted_this_run or match_id_exists(match_id):
                 skipped += 1
                 continue
             try:
                 cached_insert(match_id)
-                known.add(match_id)
+                inserted_this_run.add(match_id)
                 inserted += 1
                 logging.info("Inserted %s", match_id)
             except Exception as e:
