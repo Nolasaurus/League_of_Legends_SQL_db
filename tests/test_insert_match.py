@@ -3,8 +3,10 @@ from unittest import TestCase
 import pytest
 import json
 
-match_timeline_data_filepath = '/home/nolan/projects/LoL_data_pipeline/tests/files/NA1_4729149632_match_timeline.json'
-match_data_filepath = '/home/nolan/projects/LoL_data_pipeline/tests/files/NA1_4729149632_match_data.json'
+from pathlib import Path
+_FILES = Path(__file__).parent / "files"
+match_timeline_data_filepath = _FILES / "NA1_4729149632_match_timeline.json"
+match_data_filepath = _FILES / "NA1_4729149632_match_data.json"
 
 # Load JSON data and create DTOs
 with open(match_data_filepath, 'r') as file:

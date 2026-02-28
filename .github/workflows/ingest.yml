@@ -17,7 +17,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install "poetry<2" && poetry install --no-root
+        run: pip install poetry && poetry install --no-root
 
       - name: Ingest ladder matches
         run: poetry run python src/ingest_daily.py
