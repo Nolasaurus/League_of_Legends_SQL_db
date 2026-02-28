@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+from sqlalchemy import text
 
 from postgres_helperfile import create_postgres_engine
 
@@ -26,20 +27,33 @@ SQL_FILE = Path(__file__).parent / "sql_tables" / "window_functions.sql"
 
 
 def parse_queries(sql_file: Path) -> dict[str, str]:
-    """Split window_functions.sql on '-- <name>' comment markers."""
+    """Split window_functions.sql on '-- <name>' comment markers.
+
+    A line is treated as a query name only when the previous non-blank line
+    was a separator (starts with '-- ='), avoiding false matches on
+    description comments inside the separator block.
+    """
     queries = {}
     current_name = None
     current_lines: list[str] = []
+    prev_was_separator = False
 
     for line in sql_file.read_text().splitlines():
         stripped = line.strip()
-        if stripped.startswith("-- ") and not stripped.startswith("-- ="):
+        is_separator = stripped.startswith("-- =")
+        is_comment = stripped.startswith("-- ") and not is_separator
+
+        if is_comment and prev_was_separator:
+            # This is a query name marker immediately after a separator block
             if current_name and current_lines:
                 queries[current_name] = "\n".join(current_lines).strip()
             current_name = stripped[3:].strip()
             current_lines = []
         else:
             current_lines.append(line)
+
+        if stripped:  # only update on non-blank lines
+            prev_was_separator = is_separator
 
     if current_name and current_lines:
         queries[current_name] = "\n".join(current_lines).strip()
@@ -48,7 +62,7 @@ def parse_queries(sql_file: Path) -> dict[str, str]:
 
 
 def export(query_name: str, sql: str, conn) -> None:
-    df = pd.read_sql(sql, conn)
+    df = pd.read_sql(text(sql), conn)
     # Convert date columns to ISO strings for JSON serialisation
     for col in df.select_dtypes(include=["datetime64[ns]", "object"]):
         try:
@@ -66,6 +80,7 @@ def main():
     queries = parse_queries(SQL_FILE)
     logging.info("Found %d queries: %s", len(queries), list(queries.keys()))
 
+    failures = []
     engine = create_postgres_engine()
     with engine.connect() as conn:
         for name, sql in queries.items():
@@ -73,6 +88,11 @@ def main():
                 export(name, sql, conn)
             except Exception as e:
                 logging.error("Failed to export %s: %s", name, e)
+                failures.append(name)
+
+    if failures:
+        logging.error("Export failed for: %s", failures)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
