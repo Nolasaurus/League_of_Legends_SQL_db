@@ -256,149 +256,149 @@ CREATE TABLE IF NOT EXISTS "challenges" (
   PRIMARY KEY ("match_id", "participant_id")
 );
 
-CREATE TABLE IF NOT EXISTS "participant_frames" (
-  "match_id" VARCHAR(255),
-  "participant_id" INT,
-  "frame_number" INT,
-  "timestamp" BIGINT,
-  "level" INT,
-  "current_gold" INT,
-  "gold_per_second" INT,
-  "total_gold" INT,
-  "xp" INT,
-  "minions_killed" INT,
-  "jungle_minions_killed" INT,
-  "time_enemy_spent_controlled" INT,
-  "position_x" INT,
-  "position_y" INT,
-  PRIMARY KEY ("match_id", "frame_number", "participant_id")
-);
+-- CREATE TABLE IF NOT EXISTS "participant_frames" (
+--   "match_id" VARCHAR(255),
+--   "participant_id" INT,
+--   "frame_number" INT,
+--   "timestamp" BIGINT,
+--   "level" INT,
+--   "current_gold" INT,
+--   "gold_per_second" INT,
+--   "total_gold" INT,
+--   "xp" INT,
+--   "minions_killed" INT,
+--   "jungle_minions_killed" INT,
+--   "time_enemy_spent_controlled" INT,
+--   "position_x" INT,
+--   "position_y" INT,
+--   PRIMARY KEY ("match_id", "frame_number", "participant_id")
+-- );
 
-CREATE TABLE IF NOT EXISTS "champion_stats" (
-  "match_id" VARCHAR(255),
-  "frame_number" INT,
-  "participant_id" INT,
-  "ability_haste" INT,
-  "ability_power" INT,
-  "armor" INT,
-  "armor_pen" INT,
-  "armor_pen_percent" FLOAT,
-  "attack_damage" INT,
-  "attack_speed" FLOAT,
-  "bonus_armor_pen_percent" FLOAT,
-  "bonus_magic_pen_percent" FLOAT,
-  "cc_reduction" INT,
-  "cooldown_reduction" INT,
-  "health" INT,
-  "health_max" INT,
-  "health_regen" INT,
-  "lifesteal" FLOAT,
-  "magic_pen" INT,
-  "magic_pen_percent" FLOAT,
-  "magic_resist" INT,
-  "movement_speed" INT,
-  "omnivamp" FLOAT,
-  "physical_vamp" FLOAT,
-  "power" INT,
-  "power_max" INT,
-  "power_regen" INT,
-  "spell_vamp" FLOAT,
-  PRIMARY KEY ("match_id", "frame_number", "participant_id")
-);
+-- CREATE TABLE IF NOT EXISTS "champion_stats" (
+--   "match_id" VARCHAR(255),
+--   "frame_number" INT,
+--   "participant_id" INT,
+--   "ability_haste" INT,
+--   "ability_power" INT,
+--   "armor" INT,
+--   "armor_pen" INT,
+--   "armor_pen_percent" FLOAT,
+--   "attack_damage" INT,
+--   "attack_speed" FLOAT,
+--   "bonus_armor_pen_percent" FLOAT,
+--   "bonus_magic_pen_percent" FLOAT,
+--   "cc_reduction" INT,
+--   "cooldown_reduction" INT,
+--   "health" INT,
+--   "health_max" INT,
+--   "health_regen" INT,
+--   "lifesteal" FLOAT,
+--   "magic_pen" INT,
+--   "magic_pen_percent" FLOAT,
+--   "magic_resist" INT,
+--   "movement_speed" INT,
+--   "omnivamp" FLOAT,
+--   "physical_vamp" FLOAT,
+--   "power" INT,
+--   "power_max" INT,
+--   "power_regen" INT,
+--   "spell_vamp" FLOAT,
+--   PRIMARY KEY ("match_id", "frame_number", "participant_id")
+-- );
 
-CREATE TABLE IF NOT EXISTS "match_events" (
-  "match_id" VARCHAR(255),
-  "frame_number" INT,
-  "event_number" INT,
-  "real_timestamp" BIGINT,
-  "timestamp" BIGINT,
-  "type" VARCHAR(255),
-  "item_id" INT,
-  "participant_id" INT,
-  "level_up_type" VARCHAR(255),
-  "skill_slot" INT,
-  "creator_id" INT,
-  "ward_type" VARCHAR(255),
-  "level" INT,
-  "bounty" INT,
-  "kill_streak_length" INT,
-  "killer_id" INT,
-  "position_x" INT,
-  "position_y" INT,
-  "victim_id" INT,
-  "kill_type" VARCHAR(255),
-  "lane_type" VARCHAR(255),
-  "team_id" INT,
-  "multi_kill_length" INT,
-  "killer_team_id" INT,
-  "monster_type" VARCHAR(255),
-  "monster_sub_type" VARCHAR(255),
-  "building_type" VARCHAR(255),
-  "tower_type" VARCHAR(255),
-  "after_id" INT,
-  "before_id" INT,
-  "gold_gain" INT,
-  "game_id" BIGINT,
-  "winning_team" INT,
-  "transform_type" VARCHAR(255),
-  "name" VARCHAR(255),
-  "shutdown_bounty" INT,
-  "actual_start_time" BIGINT,
-  PRIMARY KEY ("match_id", "frame_number", "event_number")
-);
+-- CREATE TABLE IF NOT EXISTS "match_events" (
+--   "match_id" VARCHAR(255),
+--   "frame_number" INT,
+--   "event_number" INT,
+--   "real_timestamp" BIGINT,
+--   "timestamp" BIGINT,
+--   "type" VARCHAR(255),
+--   "item_id" INT,
+--   "participant_id" INT,
+--   "level_up_type" VARCHAR(255),
+--   "skill_slot" INT,
+--   "creator_id" INT,
+--   "ward_type" VARCHAR(255),
+--   "level" INT,
+--   "bounty" INT,
+--   "kill_streak_length" INT,
+--   "killer_id" INT,
+--   "position_x" INT,
+--   "position_y" INT,
+--   "victim_id" INT,
+--   "kill_type" VARCHAR(255),
+--   "lane_type" VARCHAR(255),
+--   "team_id" INT,
+--   "multi_kill_length" INT,
+--   "killer_team_id" INT,
+--   "monster_type" VARCHAR(255),
+--   "monster_sub_type" VARCHAR(255),
+--   "building_type" VARCHAR(255),
+--   "tower_type" VARCHAR(255),
+--   "after_id" INT,
+--   "before_id" INT,
+--   "gold_gain" INT,
+--   "game_id" BIGINT,
+--   "winning_team" INT,
+--   "transform_type" VARCHAR(255),
+--   "name" VARCHAR(255),
+--   "shutdown_bounty" INT,
+--   "actual_start_time" BIGINT,
+--   PRIMARY KEY ("match_id", "frame_number", "event_number")
+-- );
 
-CREATE TABLE IF NOT EXISTS "victim_damage_dealt" (
-  "match_id" VARCHAR(255),
-  "frame_number" INT,
-  "event_number" INT,
-  "damage_number" INT,
-  "participant_id" INT,
-  "basic" BOOLEAN,
-  "magic_damage" INT,
-  "physical_damage" INT,
-  "name" VARCHAR(255),
-  "spell_name" VARCHAR(255),
-  "spell_slot" INT,
-  "true_damage" INT,
-  "type" VARCHAR(255),
-  PRIMARY KEY ("match_id", "frame_number", "event_number", "damage_number")
-);
+-- CREATE TABLE IF NOT EXISTS "victim_damage_dealt" (
+--   "match_id" VARCHAR(255),
+--   "frame_number" INT,
+--   "event_number" INT,
+--   "damage_number" INT,
+--   "participant_id" INT,
+--   "basic" BOOLEAN,
+--   "magic_damage" INT,
+--   "physical_damage" INT,
+--   "name" VARCHAR(255),
+--   "spell_name" VARCHAR(255),
+--   "spell_slot" INT,
+--   "true_damage" INT,
+--   "type" VARCHAR(255),
+--   PRIMARY KEY ("match_id", "frame_number", "event_number", "damage_number")
+-- );
 
-CREATE TABLE IF NOT EXISTS "victim_damage_received" (
-  "match_id" VARCHAR(255),
-  "frame_number" INT,
-  "event_number" INT,
-  "damage_number" INT,
-  "participant_id" INT,
-  "basic" BOOLEAN,
-  "magic_damage" INT,
-  "physical_damage" INT,
-  "name" VARCHAR(255),
-  "spell_name" VARCHAR(255),
-  "spell_slot" INT,
-  "true_damage" INT,
-  "type" VARCHAR(255),
-  PRIMARY KEY ("match_id", "frame_number", "event_number", "damage_number")
-);
+-- CREATE TABLE IF NOT EXISTS "victim_damage_received" (
+--   "match_id" VARCHAR(255),
+--   "frame_number" INT,
+--   "event_number" INT,
+--   "damage_number" INT,
+--   "participant_id" INT,
+--   "basic" BOOLEAN,
+--   "magic_damage" INT,
+--   "physical_damage" INT,
+--   "name" VARCHAR(255),
+--   "spell_name" VARCHAR(255),
+--   "spell_slot" INT,
+--   "true_damage" INT,
+--   "type" VARCHAR(255),
+--   PRIMARY KEY ("match_id", "frame_number", "event_number", "damage_number")
+-- );
 
-CREATE TABLE IF NOT EXISTS "damage_stats" (
-  "match_id" VARCHAR(255),
-  "frame_number" INT,
-  "participant_id" INT,
-  "magic_damage_done" INT,
-  "magic_damage_done_to_champions" INT,
-  "magic_damage_taken" INT,
-  "physical_damage_done" INT,
-  "physical_damage_done_to_champions" INT,
-  "physical_damage_taken" INT,
-  "total_damage_done" INT,
-  "total_damage_done_to_champions" INT,
-  "total_damage_taken" INT,
-  "true_damage_done" INT,
-  "true_damage_done_to_champions" INT,
-  "true_damage_taken" INT,
-  PRIMARY KEY ("match_id", "participant_id", "frame_number")
-);
+-- CREATE TABLE IF NOT EXISTS "damage_stats" (
+--   "match_id" VARCHAR(255),
+--   "frame_number" INT,
+--   "participant_id" INT,
+--   "magic_damage_done" INT,
+--   "magic_damage_done_to_champions" INT,
+--   "magic_damage_taken" INT,
+--   "physical_damage_done" INT,
+--   "physical_damage_done_to_champions" INT,
+--   "physical_damage_taken" INT,
+--   "total_damage_done" INT,
+--   "total_damage_done_to_champions" INT,
+--   "total_damage_taken" INT,
+--   "true_damage_done" INT,
+--   "true_damage_done_to_champions" INT,
+--   "true_damage_taken" INT,
+--   PRIMARY KEY ("match_id", "participant_id", "frame_number")
+-- );
 
 CREATE TABLE IF NOT EXISTS "teams" (
   "team_id" INT,
@@ -431,37 +431,37 @@ DO $$ BEGIN
   ALTER TABLE "participant_dto" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN
-  ALTER TABLE "match_events" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- DO $$ BEGIN
+--   ALTER TABLE "match_events" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
+-- EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   ALTER TABLE "teams" ADD FOREIGN KEY ("match_id") REFERENCES "match_metadata" ("match_id");
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN
-  ALTER TABLE "challenges" ADD FOREIGN KEY ("match_id", "participant_id") REFERENCES "participant_dto" ("match_id", "participant_id");
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- DO $$ BEGIN
+--   ALTER TABLE "challenges" ADD FOREIGN KEY ("match_id", "participant_id") REFERENCES "participant_dto" ("match_id", "participant_id");
+-- EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   ALTER TABLE "perk_style_selections" ADD FOREIGN KEY ("match_id", "participant_id") REFERENCES "participant_dto" ("match_id", "participant_id");
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN
-  ALTER TABLE "victim_damage_dealt" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- DO $$ BEGIN
+--   ALTER TABLE "victim_damage_dealt" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
+-- EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN
-  ALTER TABLE "victim_damage_received" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- DO $$ BEGIN
+--   ALTER TABLE "victim_damage_received" ADD FOREIGN KEY ("match_id", "frame_number", "event_number") REFERENCES "match_events" ("match_id", "frame_number", "event_number");
+-- EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN
-  ALTER TABLE "champion_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- DO $$ BEGIN
+--   ALTER TABLE "champion_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
+-- EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-DO $$ BEGIN
-  ALTER TABLE "damage_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- DO $$ BEGIN
+--   ALTER TABLE "damage_stats" ADD FOREIGN KEY ("match_id", "frame_number", "participant_id") REFERENCES "participant_frames" ("match_id", "frame_number", "participant_id");
+-- EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Schema migrations: add new columns to existing tables if not present
 ALTER TABLE "match_metadata" ADD COLUMN IF NOT EXISTS "end_of_game_result" VARCHAR(255);
@@ -473,17 +473,17 @@ ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "player_augment5" INT;
 ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "player_augment6" INT;
 ALTER TABLE "participant_dto" ADD COLUMN IF NOT EXISTS "role_bound_item" INT;
 
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "earliest_baron" FLOAT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "earliest_dragon_takedown" FLOAT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "first_turret_killed_time" FLOAT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "baron_buff_gold_advantage_over_threshold" FLOAT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "control_ward_time_coverage_in_river_or_enemy_half" FLOAT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "legendary_item_used" INT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "solo_turrets_lategame" INT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "void_monster_kill" INT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "fist_bump_participation" INT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "played_champ_select_position" INT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "shortest_time_to_ace_from_first_takedown" FLOAT;
-ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "heal_from_map_sources" FLOAT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "earliest_baron" FLOAT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "earliest_dragon_takedown" FLOAT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "first_turret_killed_time" FLOAT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "baron_buff_gold_advantage_over_threshold" FLOAT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "control_ward_time_coverage_in_river_or_enemy_half" FLOAT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "legendary_item_used" INT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "solo_turrets_lategame" INT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "void_monster_kill" INT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "fist_bump_participation" INT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "played_champ_select_position" INT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "shortest_time_to_ace_from_first_takedown" FLOAT;
+-- ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "heal_from_map_sources" FLOAT;
 
-ALTER TABLE "champion_stats" ADD COLUMN IF NOT EXISTS "cooldown_reduction" INT;
+-- ALTER TABLE "champion_stats" ADD COLUMN IF NOT EXISTS "cooldown_reduction" INT;
