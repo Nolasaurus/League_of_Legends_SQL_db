@@ -25,7 +25,8 @@ logging.basicConfig(
 
 SUMMONER_SAMPLE = 50   # max summoners to process per run
 MATCHES_PER_SUMMONER = 20
-MAX_INSERTS = 1000     # stop after inserting this many new matches per run
+MAX_INSERTS = 150      # rate limit: 100 req/2 min → ~2 req/match → ~150 matches per 8 min
+MAX_RUNTIME_SECONDS = 480  # hard wall-clock ceiling (8 min)
 _SCHEMA = Path(__file__).parent / "sql_tables" / "loldb.sql"
 
 
@@ -39,14 +40,19 @@ def ensure_schema():
     logging.info("Schema verified/applied.")
 
 
-def match_id_exists(match_id: str) -> bool:
-    """Point lookup against the PK index — no full table scan."""
-    with connect_db("readonly") as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT 1 FROM match_metadata WHERE match_id = %s LIMIT 1", (match_id,)
-            )
-            return cur.fetchone() is not None
+def existing_in_db(cursor, match_ids: list) -> set:
+    """Return the subset of match_ids already in the DB.
+
+    Uses a single indexed ANY(%s) query on an already-open cursor —
+    no new connection overhead, and no full table scan.
+    """
+    if not match_ids:
+        return set()
+    cursor.execute(
+        "SELECT match_id FROM match_metadata WHERE match_id = ANY(%s)",
+        (match_ids,),
+    )
+    return {row[0] for row in cursor.fetchall()}
 
 
 def _bar(current: int, total: int, width: int = 20) -> str:
@@ -75,53 +81,68 @@ def main():
 
     sample = random.sample(all_ids, min(SUMMONER_SAMPLE, len(all_ids)))
     total_summoners = len(sample)
-    # In-memory set tracks only IDs inserted this run so the same match_id
-    # seen via multiple summoners doesn't trigger redundant API calls.
+    # In-memory set tracks IDs inserted this run to avoid redundant API calls
+    # when the same match appears in multiple summoners' histories.
     inserted_this_run: set[str] = set()
     inserted = 0
     skipped = 0
 
-    for summoner_num, puuid in enumerate(sample, 1):
-        logging.info(
-            "Summoner %s  inserted=%d skipped=%d",
-            _bar(summoner_num, total_summoners),
-            inserted,
-            skipped,
-        )
-
-        # Modern Riot API returns puuid directly from league endpoints.
-        # If it's still a summonerId (older API), resolve it to puuid.
-        if len(puuid) < 50:
-            puuid = client.get_puuid_by_summon_id(puuid)
-        if not puuid:
-            continue
-
-        match_ids = client.get_match_ids_by_puuid(puuid, count=MATCHES_PER_SUMMONER) or []
-        for match_id in match_ids:
-            if inserted >= MAX_INSERTS:
-                logging.info("Reached MAX_INSERTS limit (%d), stopping.", MAX_INSERTS)
+    # One readonly connection for all existence checks — reused across summoners.
+    ro_conn = connect_db("readonly")
+    ro_cur = ro_conn.cursor()
+    try:
+        for summoner_num, puuid in enumerate(sample, 1):
+            elapsed = time.monotonic() - run_start
+            if elapsed > MAX_RUNTIME_SECONDS:
+                logging.info("Time budget exceeded (%.0fs), stopping.", elapsed)
                 break
-            if match_id in inserted_this_run or match_id_exists(match_id):
-                skipped += 1
-                continue
-            t0 = time.monotonic()
-            try:
-                cached_insert(match_id)
-                inserted_this_run.add(match_id)
-                inserted += 1
-                elapsed = time.monotonic() - run_start
-                logging.info(
-                    "  ✓ %s  %s  %.1fs/match  %s",
-                    match_id,
-                    _bar(inserted, MAX_INSERTS),
-                    time.monotonic() - t0,
-                    _eta(inserted, elapsed),
-                )
-            except Exception as e:
-                logging.warning("  ✗ Skipping %s: %s", match_id, e)
 
-        if inserted >= MAX_INSERTS:
-            break
+            logging.info(
+                "Summoner %s  inserted=%d skipped=%d",
+                _bar(summoner_num, total_summoners),
+                inserted,
+                skipped,
+            )
+
+            # Modern Riot API returns puuid directly from league endpoints.
+            # If it's still a summonerId (older API), resolve it to puuid.
+            if len(puuid) < 50:
+                puuid = client.get_puuid_by_summon_id(puuid)
+            if not puuid:
+                continue
+
+            match_ids = client.get_match_ids_by_puuid(puuid, count=MATCHES_PER_SUMMONER) or []
+            # One indexed batch query for all 20 candidates — no per-match connections.
+            in_db = existing_in_db(ro_cur, match_ids)
+
+            for match_id in match_ids:
+                if inserted >= MAX_INSERTS:
+                    logging.info("Reached MAX_INSERTS limit (%d), stopping.", MAX_INSERTS)
+                    break
+                if match_id in inserted_this_run or match_id in in_db:
+                    skipped += 1
+                    continue
+                t0 = time.monotonic()
+                try:
+                    cached_insert(match_id)
+                    inserted_this_run.add(match_id)
+                    inserted += 1
+                    elapsed = time.monotonic() - run_start
+                    logging.info(
+                        "  ✓ %s  %s  %.1fs/match  %s",
+                        match_id,
+                        _bar(inserted, MAX_INSERTS),
+                        time.monotonic() - t0,
+                        _eta(inserted, elapsed),
+                    )
+                except Exception as e:
+                    logging.warning("  ✗ Skipping %s: %s", match_id, e)
+
+            if inserted >= MAX_INSERTS:
+                break
+    finally:
+        ro_cur.close()
+        ro_conn.close()
 
     total_elapsed = time.monotonic() - run_start
     rate = inserted / total_elapsed * 60 if total_elapsed > 0 else 0
