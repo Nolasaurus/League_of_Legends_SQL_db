@@ -10,6 +10,7 @@ Capped at SUMMONER_SAMPLE summoners per run to stay within Riot rate limits.
 import logging
 import random
 import sys
+import time
 from pathlib import Path
 
 from api_client import API_Client
@@ -48,7 +49,22 @@ def match_id_exists(match_id: str) -> bool:
             return cur.fetchone() is not None
 
 
+def _bar(current: int, total: int, width: int = 20) -> str:
+    filled = int(width * current / total) if total else 0
+    return f"[{'=' * filled}{' ' * (width - filled)}] {current}/{total}"
+
+
+def _eta(inserted: int, elapsed: float) -> str:
+    if inserted == 0 or elapsed == 0:
+        return "ETA=?"
+    rate = inserted / elapsed          # inserts per second
+    remaining = (MAX_INSERTS - inserted) / rate
+    m, s = divmod(int(remaining), 60)
+    return f"ETA≈{m}m{s:02d}s"
+
+
 def main():
+    run_start = time.monotonic()
     ensure_schema()
     client = API_Client()
 
@@ -58,13 +74,21 @@ def main():
     logging.info("Ladder size: %d summoners", len(all_ids))
 
     sample = random.sample(all_ids, min(SUMMONER_SAMPLE, len(all_ids)))
+    total_summoners = len(sample)
     # In-memory set tracks only IDs inserted this run so the same match_id
     # seen via multiple summoners doesn't trigger redundant API calls.
     inserted_this_run: set[str] = set()
     inserted = 0
     skipped = 0
 
-    for puuid in sample:
+    for summoner_num, puuid in enumerate(sample, 1):
+        logging.info(
+            "Summoner %s  inserted=%d skipped=%d",
+            _bar(summoner_num, total_summoners),
+            inserted,
+            skipped,
+        )
+
         # Modern Riot API returns puuid directly from league endpoints.
         # If it's still a summonerId (older API), resolve it to puuid.
         if len(puuid) < 50:
@@ -80,18 +104,34 @@ def main():
             if match_id in inserted_this_run or match_id_exists(match_id):
                 skipped += 1
                 continue
+            t0 = time.monotonic()
             try:
                 cached_insert(match_id)
                 inserted_this_run.add(match_id)
                 inserted += 1
-                logging.info("Inserted %s", match_id)
+                elapsed = time.monotonic() - run_start
+                logging.info(
+                    "  ✓ %s  %s  %.1fs/match  %s",
+                    match_id,
+                    _bar(inserted, MAX_INSERTS),
+                    time.monotonic() - t0,
+                    _eta(inserted, elapsed),
+                )
             except Exception as e:
-                logging.warning("Skipping %s: %s", match_id, e)
+                logging.warning("  ✗ Skipping %s: %s", match_id, e)
 
         if inserted >= MAX_INSERTS:
             break
 
-    logging.info("Done. Inserted: %d, Already present: %d", inserted, skipped)
+    total_elapsed = time.monotonic() - run_start
+    rate = inserted / total_elapsed * 60 if total_elapsed > 0 else 0
+    logging.info(
+        "Done in %.0fs — inserted=%d skipped=%d rate=%.1f/min",
+        total_elapsed,
+        inserted,
+        skipped,
+        rate,
+    )
 
 
 if __name__ == "__main__":
