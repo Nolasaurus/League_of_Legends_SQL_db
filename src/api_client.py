@@ -64,7 +64,7 @@ class API_Client:
 
         # Common code to make an HTTP request to the API
         try:
-            response = requests.get(url, headers=headers, timeout=2)
+            response = requests.get(url, headers=headers, timeout=timeout)
             response.raise_for_status()  # Raises HTTPError for 4xx/5xx responses
 
             return response.json()
@@ -138,18 +138,27 @@ class API_Client:
         else:
             return None
 
+    def _extract_puuids_from_league(self, response):
+        """Extract PUUIDs from a league response. Riot returns puuid directly
+        in modern API responses; summonerId was deprecated."""
+        entries = response.get("entries", [])
+        if not entries:
+            return []
+        logging.info("League entry keys: %s", list(entries[0].keys()))
+        return [
+            entry.get("puuid") or entry.get("summonerId")
+            for entry in entries
+            if entry.get("puuid") or entry.get("summonerId")
+        ]
+
     def get_challenger_league(self, queue="RANKED_SOLO_5x5"):
         logging.info("Fetching Challenger league for queue: %s", queue)
         url = f"https://na1.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/{queue}"
         response = self._make_request(url, timeout=5)
-        if response:
-            return [entry["summonerId"] for entry in response["entries"]]
-        return None
+        return self._extract_puuids_from_league(response) if response else None
 
     def get_grandmaster_league(self, queue="RANKED_SOLO_5x5"):
         logging.info("Fetching GrandMaster league for queue: %s", queue)
         url = f"https://na1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/{queue}"
         response = self._make_request(url, timeout=5)
-        if response:
-            return [entry["summonerId"] for entry in response["entries"]]
-        return None
+        return self._extract_puuids_from_league(response) if response else None

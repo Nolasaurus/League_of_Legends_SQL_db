@@ -47,8 +47,11 @@ def main():
     inserted = 0
     skipped = 0
 
-    for summoner_id in sample:
-        puuid = client.get_puuid_by_summon_id(summoner_id)
+    for puuid in sample:
+        # Modern Riot API returns puuid directly from league endpoints.
+        # If it's still a summonerId (older API), resolve it to puuid.
+        if len(puuid) < 50:
+            puuid = client.get_puuid_by_summon_id(puuid)
         if not puuid:
             continue
 
