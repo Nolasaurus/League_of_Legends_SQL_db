@@ -17,18 +17,18 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install poetry && poetry install --no-root
+        run: pip install "poetry<2" && poetry install --no-root
 
       - name: Ingest ladder matches
         run: poetry run python src/ingest_daily.py
         env:
           RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.NEONDB_CONNECTION_STRING }}
 
       - name: Export JSON for GitHub Pages
         run: poetry run python src/export_json.py
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.NEONDB_CONNECTION_STRING }}
 
       - name: Commit updated data files
         run: |
