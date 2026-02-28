@@ -124,7 +124,7 @@ def main():
                     continue
                 t0 = time.monotonic()
                 try:
-                    cached_insert(match_id)
+                    cached_insert(match_id, skip_timeline=True)
                     inserted_this_run.add(match_id)
                     inserted += 1
                     elapsed = time.monotonic() - run_start

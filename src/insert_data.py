@@ -11,19 +11,23 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-def cached_insert(match_id):
+def cached_insert(match_id, skip_timeline=False):
     logging.info("Starting main process for match ID: %s", match_id)
     api_client = API_Client()
-    # get match_dto, match_timeline_dto
     match_dto = api_client.get_match_by_match_id(match_id)
-    match_timeline_dto = api_client.get_match_timeline(match_id)
 
-    if match_dto is None or match_timeline_dto is None:
+    if match_dto is None:
         raise Exception("Riot API call failed. Check API key.")
 
-    # Save to cache
     save_to_cache(f"match_{match_id}.json", match_dto)
-    save_to_cache(f"timeline_{match_id}.json", match_timeline_dto)
+
+    if skip_timeline:
+        match_timeline_dto = None
+    else:
+        match_timeline_dto = api_client.get_match_timeline(match_id)
+        if match_timeline_dto is None:
+            raise Exception("Riot API call failed. Check API key.")
+        save_to_cache(f"timeline_{match_id}.json", match_timeline_dto)
 
     # try to insert
     try:
@@ -65,9 +69,9 @@ def save_to_cache(filename, data):
         json.dump(data, file)
 
 
-def insert_match(match_dto, match_timeline_dto):
+def insert_match(match_dto, match_timeline_dto=None):
     data_match_id = match_dto.get("metadata").get("matchId")
-    engine = create_postgres_engine()  # Make sure this is correctly implemented
+    engine = create_postgres_engine()
     logging.info(
         "Inserting match data for %s match DTO and timeline DTO", data_match_id
     )
@@ -79,18 +83,18 @@ def insert_match(match_dto, match_timeline_dto):
         except Exception as e:
             logging.warning(f"Insertion to {table_name} failed: {e}")
 
-    # Use try_insert for each DataFrame insertion
     try_insert(get_match_metadata(match_dto), "match_metadata")
     try_insert(get_participant_dto(match_dto), "participant_dto")
     try_insert(get_perk_style_selections(match_dto), "perk_style_selections")
-    try_insert(get_challenges(match_dto), "challenges")
-    try_insert(get_participant_frames(match_timeline_dto), "participant_frames")
-    try_insert(get_champion_stats(match_timeline_dto), "champion_stats")
-    try_insert(get_match_events(match_timeline_dto), "match_events")
-    try_insert(get_victim_damage_dealt(match_timeline_dto), "victim_damage_dealt")
-    try_insert(get_victim_damage_received(match_timeline_dto), "victim_damage_received")
-    try_insert(get_damage_stats(match_timeline_dto), "damage_stats")
     try_insert(get_teams(match_dto), "teams")
     try_insert(get_bans(match_dto), "bans")
+
+    if match_timeline_dto is not None:
+        try_insert(get_participant_frames(match_timeline_dto), "participant_frames")
+        try_insert(get_champion_stats(match_timeline_dto), "champion_stats")
+        try_insert(get_match_events(match_timeline_dto), "match_events")
+        try_insert(get_victim_damage_dealt(match_timeline_dto), "victim_damage_dealt")
+        try_insert(get_victim_damage_received(match_timeline_dto), "victim_damage_received")
+        try_insert(get_damage_stats(match_timeline_dto), "damage_stats")
 
     logging.info("Data insertion for match %s completed successfully", data_match_id)
